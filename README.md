@@ -46,7 +46,7 @@ The application uses **Spring Boot** and **JPA** for its backend, while the data
 
 - **Submit Review**: 
     - URL: `http://localhost:8080/reviews/submit`
-    - Description: Submit a new review to analyze the sentiment.
+    - Description: Submit a new thought to analyze the sentiment.
   
 - **H2 Console**:
     - URL: `http://localhost:8080/h2-console`
