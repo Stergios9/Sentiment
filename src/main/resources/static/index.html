@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ΚΑΤΑΓΡΑΦΗ ΨΥΧΟΛΟΓΙΚΟΥ ΙΣΤΟΡΙΚΟΥ</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f0f0; /* Ελαφρύ φόντο για τον περιεχόμενο */
+        }
+        .background-container {
+            position: relative;
+            width: 100%;
+            height: 300px; /* Ύψος εικόνας - προσαρμόστε όπως χρειάζεται */
+            overflow: hidden;
+        }
+        .background-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Καλύπτει το container χωρίς παραμόρφωση */
+        }
+        .content-container {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            text-align: center;
+            color: white;
+            background: rgba(0, 0, 0, 0.5); /* Σκιά για καλύτερη αναγνωσιμότητα */
+            padding: 20px 0;
+        }
+        h1 {
+            margin: 0;
+        }
+        .form-container {
+            margin-top: 20px; /* Απόσταση κάτω από την εικόνα */
+            text-align: center;
+            padding: 20px;
+            background-color: white; /* Φόντο για την περιοχή της φόρμας */
+            border-radius: 8px; /* Στρογγυλεμένες γωνίες */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Σκιά για την περιοχή της φόρμας */
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        textarea {
+            width: 800px; /* Ρυθμίστε το πλάτος της περιοχής κειμένου αν θέλετε */
+            height: 200px; /* Ρυθμίστε το ύψος της περιοχής κειμένου αν θέλετε */
+            background-color: #e0e0e0;
+            border: 1px solid #ccc; /* Ελαφρύ πλαίσιο */
+            border-radius: 4px; /* Στρογγυλεμένες γωνίες */
+            padding: 10px; /* Εσωτερικό περιθώριο */
+        }
+        label {
+            font-size: 1.5em; /* Ρυθμίστε το μέγεθος της γραμματοσειράς */
+            font-weight: bold; /* Προαιρετικά, για να γίνει το κείμενο πιο έντονο */
+            margin-bottom: 10px; /* Προσθήκη περιθωρίου κάτω από το label */
+        }
+        select {
+            width: 800px; /* Ρυθμίστε το πλάτος της περιοχής επιλογής */
+            background-color: #e0e0e0;
+            border: 1px solid #ccc; /* Ελαφρύ πλαίσιο */
+            border-radius: 4px; /* Στρογγυλεμένες γωνίες */
+            padding: 10px; /* Εσωτερικό περιθώριο */
+            font-size: 1em; /* Μέγεθος γραμματοσειράς */
+        }
+    </style>
+</head>
+<body>
+<div class="background-container">
+    <img src="pic3.jpg" alt="Background Image">
+    <div class="content-container">
+        <h1>ΚΑΤΑΓΡΑΦΗ ΨΥΧΟΛΟΓΙΚΟΥ ΙΣΤΟΡΙΚΟΥ</h1>
+    </div>
+</div>
+<div class="form-container">
+    <form action="/reviews/submit" method="post">
+        <label for="firstName">First Name:</label>
+        <input type="text" id="firstName" name="firstName" required>
+        <label for="lastName">Last Name:</label>
+        <input type="text" id="lastName" name="lastName" required>
+        <label for="location">Location:</label>
+        <select id="location" name="location" required>
+            <option value="" disabled selected>Select your location</option>
+            <option value="Thessaloniki">Thessaloniki</option>
+            <option value="Athens">Athens</option>
+            <option value="Crete">Crete</option>
+            <option value="Serres">Serres</option>
+            <option value="Kavala">Kavala</option>
+            <option value="Patra">Patra</option>
+            <option value="Rhodes">Rhodes</option>
+            <option value="Iwannina">Iwannina</option>
+            <option value="Zakinthos">Zakinthos</option>
+            <option value="Larisa">Larisa</option>
+            <option value="Santorini">Santorini</option>
+            <option value="Piraeus">Piraeus</option>
+            <option value="Trikala">Trikala</option>
+            <option value="Ithaki">Ithaki</option>
+            <option value="Sparta">Sparta</option>
+            <option value="Salamina">Salamina</option>
+            <option value="Korinthos">Korinthos</option>
+            <option value="Cyprous">Cyprous</option>
+            <option value="Chalkidiki">Chalkidiki</option>
+            <option value="Komotini">Komotini</option>
+            <option value="Alexandroupoli">Alexandroupoli</option>
+            <!-- Add more locations as needed -->
+        </select>
+        <label for="comment">Describe your psychological state and mention the emotions that have possessed you in the last period of time:</label>
+        <textarea id="comment" name="comment" required></textarea>
+        <br><br>
+        <button type="submit">Submit</button>
+    </form>
+</div>
+</body>
+</html>
