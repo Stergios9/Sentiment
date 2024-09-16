@@ -1,6 +1,7 @@
 # Sentiment Application
 
-The **Sentiment Application** is a psychological support platform that analyzes user descriptions and thoughts and provides emotional sentiment feedback. The application uses **Spring Boot** and **JPA** for its backend, while the data is stored in an in-memory **H2 Database**.
+The 'Sentiment' application is an online psychological support application for citizens. It provides a medical assessment, relaxation methods, and approaches to managing potential illness, and refers users to a mental health specialist located in the patient's area. 
+The application uses **Spring Boot** and **JPA** for its backend, while the data is stored in an in-memory **H2 Database**.
 
 ## Features
 
