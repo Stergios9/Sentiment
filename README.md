@@ -1,12 +1,12 @@
 # Sentiment Application
 
-The **Sentiment Application** is a psychological support platform that analyzes user reviews and provides emotional sentiment feedback. The application uses **Spring Boot** and **JPA** for its backend, while the data is stored in an in-memory **H2 Database**.
+The **Sentiment Application** is a psychological support platform that analyzes user descritions and thoughts and provides emotional sentiment feedback. The application uses **Spring Boot** and **JPA** for its backend, while the data is stored in an in-memory **H2 Database**.
 
 ## Features
 
-- Analyze user sentiment based on reviews.
+- Analyze user sentiment based on thoughts.
 - Store and manage reviews in an H2 database.
-- REST API endpoints for submitting and viewing reviews.
+- REST API endpoints for submitting and viewing thoughts.
 
 ## Technologies Used
 
