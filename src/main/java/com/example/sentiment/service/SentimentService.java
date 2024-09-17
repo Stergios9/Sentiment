@@ -3,6 +3,7 @@ package com.example.sentiment.service;
 import com.example.sentiment.entiy.Review;
 import com.example.sentiment.entiy.Sentiment;
 import com.example.sentiment.utils.SentimentWords;
+import com.example.sentiment.utils.NegationWords;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.*;
@@ -17,11 +18,6 @@ public class SentimentService {
 
     @Autowired
     private PhrasalVerbService phrasalVerbService;
-
-    public static final Set<String> NEGATION_WORDS = new HashSet<>(Arrays.asList(
-            "not", "never", "no", "none", "hardly", "barely", "rarely", "seldom", "without", "neither"
-    ));
-
 
     public Sentiment analyzeSentiment(String comment, Review review) {
         Properties props = new Properties();
@@ -48,9 +44,11 @@ public class SentimentService {
         for (CoreSentence sentence : document.sentences()) {
             List<CoreLabel> tokens = sentence.tokens();
             for (int i = 0; i < tokens.size(); i++) {
+                String lemma = tokens.get(i).lemma();
+                System.out.println("\nlemma: " + lemma);
                 String word = tokens.get(i).lemma().toLowerCase();
                 String pos = tokens.get(i).get(CoreAnnotations.PartOfSpeechAnnotation.class);
-                System.out.println("\n\nToken: " + word + ", POS: " + pos+"\n");
+                System.out.println("\nToken: " + word + ", POS: " + pos+"\n");
 
                 // Check if the token is punctuation or a number
                 if (word.matches("\\p{Punct}") || word.matches("\\d+")) {
@@ -70,7 +68,7 @@ public class SentimentService {
                 }
 
                 // Check for negation word and reset negateWindow
-                if (NEGATION_WORDS.contains(word)) {
+                if (NegationWords.NEGATION_WORDS.contains(word)) {
                     negateWindow = negateDistance;
                     negateNext = true;
                     continue;
@@ -84,7 +82,6 @@ public class SentimentService {
                     String phrasalVerb = word + " " + nextWord;
 
                     int result = phrasalVerbService.processPhrasalVerb(phrasalVerb, sentimentWords,negateNext);
-                    System.out.println("sentimentWords after "+j+" entrance in PhrasaVerbService: " + sentimentWords);
 
                     if (result != 0) {
                         if (negateNext) {
@@ -170,15 +167,67 @@ public class SentimentService {
             }
         }
 
+        // PRINT THE RESULTS OF NPL PROCESSING
+        printStatistcs(totalWords,numberOf_sentimentWords,sentimentWords);
+
+        // Calculate scores
+        Map<String, Double> emotionScores = calculateScores(totalWords, joyfulCount, fearfulCount, anxiousCount, sadnessCount, angryCount , neutralCount);
+
+        // Generate composite sentiment by sorting the keys (emotions) alphabetically
+        String compositeSentiment = compositeSentiment(emotionScores);
+
+        System.out.println("\ncompositeSentiment: " + compositeSentiment+"\n\n");
+
+        return new Sentiment(compositeSentiment, review);
+    }
+
+    private Map<String, Integer> initializeEmotionCounts(){
+        Map<String, Integer> counts  = new HashMap<>();
+        counts.put("joy", 0);
+        counts.put("fear", 0);
+        counts.put("anxiety", 0);
+        counts.put("sadness", 0);
+        counts.put("angry", 0);
+        counts.put("neutral", 0);
+        return counts;
+    }
+
+    // Reverse emotion when there is a negative meaning
+    private int invertSentiment(int sentiment) {
+        // Invert the sentiment score based on negation
+        switch (sentiment) {
+            case 1: // Angry
+                return 2; // Joyful
+            case 2: // Joyful
+                return 1; // Angry
+            case 3: // Fearful
+                return 2; // Anxious
+            case 4: // Anxious
+                return 2; // Fearful
+            case 5: // Sadness
+                return 2; // Joyful
+            default:
+                return 0;
+        }
+    }
+    private String compositeSentiment(Map<String, Double> emotionScores){
+        String compositeSentiment = emotionScores.keySet().stream()
+                .sorted()  // Sort emotions alphabetically
+                .collect(Collectors.joining("_"));
+        return compositeSentiment;
+    }
+
+    private void printStatistcs(int totalWords,int numberOf_sentimentWords,List<String> sentimentWords){
         System.out.println("\n\n********** Statistics **********");
         System.out.println("\nTotalwords: " + totalWords);
         System.out.println("\nnumberOf_sentimentWords: " + numberOf_sentimentWords);
         System.out.println("\nsentimentWords: " + sentimentWords);
+    }
 
+    private Map<String, Double> calculateScores(int totalWords,int joyfulCount, int fearfulCount, int anxiousCount, int sadnessCount, int angryCount ,int neutralCount){
         // Avoid division by zero
         if (totalWords == 0) totalWords = 1;
 
-        // Calculate scores
         double joyScore = joyfulCount / (double) totalWords;
         double fearScore = fearfulCount / (double) totalWords;
         double anxiousScore = anxiousCount / (double) totalWords;
@@ -216,32 +265,7 @@ public class SentimentService {
         if (joyScore < 0.01 && fearScore < 0.01 && anxiousScore < 0.01 && sadnessScore < 0.01 && angerScore < 0.01) {
             emotionScores.put("neutral", 1.0);
         }
-
-        // Generate composite sentiment by sorting the keys (emotions) alphabetically
-        String compositeSentiment = emotionScores.keySet().stream()
-                .sorted()  // Sort emotions alphabetically
-                .collect(Collectors.joining("_"));
-
-        System.out.println("\ncompositeSentiment: " + compositeSentiment+"\n\n");
-
-        return new Sentiment(compositeSentiment, review);
+        return emotionScores;
     }
 
-    private int invertSentiment(int sentiment) {
-        // Invert the sentiment score based on negation
-        switch (sentiment) {
-            case 1: // Angry
-                return 2; // Joyful
-            case 2: // Joyful
-                return 1; // Angry
-            case 3: // Fearful
-                return 4; // Anxious
-            case 4: // Anxious
-                return 3; // Fearful
-            case 5: // Sadness
-                return 2; // Joyful
-            default:
-                return 0;
-        }
-    }
 }

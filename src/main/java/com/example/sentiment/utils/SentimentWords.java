@@ -9,14 +9,14 @@ public class SentimentWords {
 
     public static final Set<String> ANXIOUS_WORDS = new HashSet<>(Arrays.asList(
             "anxious", "stressed", "worried", "nervous", "tense", "uneasy",
-            "restless", "jittery", "agitated", "fretful",
-            "overwhelmed", "panicky", "fraught", "distraught", "alarmed", "distressed"
+            "restless", "jittery", "agitated", "fretful","worry",
+            "overwhelmed", "panicky", "fraught", "distraught", "alarmed", "distressed","exhaust","exhausted","exhausting"
     ));
     public static final Set<String> FEARING_WORDS = new HashSet<>(Arrays.asList(
             "fear", "fright", "terror", "horror", "alarm", "panic", "dread", "trepidation", "apprehension", "anxiety",
-            "worry", "unease", "consternation", "concern", "phobia", "dread", "frighten", "terrify", "alarm", "scare",
-            "panic", "startle", "apprehend", "worry", "agonize", "shudder", "tremble", "quake", "fret", "cower", "afraid",
-            "frightened", "scared", "fearful", "terrified", "alarmed", "panicked", "apprehensive", "anxious", "frightening",
+            "unease", "consternation", "concern", "phobia", "dread",  "terrify", "alarm", "scare",
+            "panic", "startle", "apprehend", "agonize", "shudder", "tremble", "quake", "fret", "cower", "afraid",
+            "frightened", "scared", "fearful", "terrified", "alarmed", "panicked", "apprehensive", "frightening",
             "timid", "timorous", "shaken", "startled", "dreading", "jittery", "fearfully", "frighteningly", "terrifyingly",
             "alarmingly", "apprehensively", "uneasily", "timidly", "timorously", "anxiously", "fearing", "dreading",
             "terrifying", "alarming", "scaring", "panicking", "startling", "worrying", "agonizing", "shuddering",
@@ -66,7 +66,7 @@ public class SentimentWords {
 
     public static final Set<String> SADNESS_WORDS = new HashSet<>(Arrays.asList(
             "bad", "frustrated", "disappointed", "jealous", "envious", "lonely", "upset",  "ashamed", "bitter",
-            "dismal", "glum", "morose", "melancholy","unhappy","exhausted",
+            "dismal", "glum", "morose", "melancholy","unhappy",
 
             // Nouns
             "sadness", "sorrow", "grief", "melancholy", "misery", "despair", "gloom", "heartache", "woe", "depression",
