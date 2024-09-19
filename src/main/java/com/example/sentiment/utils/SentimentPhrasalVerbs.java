@@ -25,7 +25,7 @@ public class SentimentPhrasalVerbs {
 
     public List<String> getAnxietyPhrasalVerbs() {
         return Arrays.asList("worry about", "stress out", "fret over", "chew over", "freak out", "lose sleep over", "dwell on",
-                "bottle up", "sweat over", "agonize over", "pace around", "psych out");
+                "bottle up", "sweat over", "agonize over", "pace around", "psych out", "heart race");
     }
 
     public List<String> getSadnessPhrasalVerbs() {

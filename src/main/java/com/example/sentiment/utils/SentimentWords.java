@@ -9,17 +9,17 @@ public class SentimentWords {
 
     public static final Set<String> ANXIOUS_WORDS = new HashSet<>(Arrays.asList(
             "anxious", "stressed", "worried", "nervous", "tense", "uneasy",
-            "restless", "jittery", "agitated", "fretful","worry",
-            "overwhelmed", "panicky", "fraught", "distraught", "alarmed", "distressed","exhaust","exhausted","exhausting"
+            "restless", "jittery", "agitated", "fretful","worry", "anxiety",
+            "panicky", "fraught", "distraught", "alarmed", "distressed","exhaust","exhausted","exhausting"
     ));
     public static final Set<String> FEARING_WORDS = new HashSet<>(Arrays.asList(
-            "fear", "fright", "terror", "horror", "alarm", "panic", "dread", "trepidation", "apprehension", "anxiety",
+            "fear", "fright", "terror", "horror", "alarm", "panic", "dread", "trepidation", "apprehension",
             "unease", "consternation", "concern", "phobia", "dread",  "terrify", "alarm", "scare",
             "panic", "startle", "apprehend", "agonize", "shudder", "tremble", "quake", "fret", "cower", "afraid",
             "frightened", "scared", "fearful", "terrified", "alarmed", "panicked", "apprehensive", "frightening",
             "timid", "timorous", "shaken", "startled", "dreading", "jittery", "fearfully", "frighteningly", "terrifyingly",
             "alarmingly", "apprehensively", "uneasily", "timidly", "timorously", "anxiously", "fearing", "dreading",
-            "terrifying", "alarming", "scaring", "panicking", "startling", "worrying", "agonizing", "shuddering",
+            "terrifying", "alarming", "scaring", "panicking", "startling", "worrying", "agonizing", "shuddering","overwhelmed",
             "trembling", "quaking", "fretting", "cowering", "guilty", "troubled", "panicked", "insecure", "pessimistic"
 
     ));
@@ -88,7 +88,7 @@ public class SentimentWords {
 
             // Gerunds
             "saddening", "grieving", "mourning", "lamenting", "sorrowing", "weeping", "wailing", "bemoaning", "bewailing",
-            "brooding", "pining", "regretting", "agonizing", "despairing", "doleful",
+            "brooding", "pining", "regretting", "agonizing", "despairing", "doleful","frustrating",
 
             // phrasal verbs
             " feel horrible", "feel terrible", " feel poor", " feel negative", " been hurt", "mope around", "fall apart",

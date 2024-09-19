@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Service
@@ -20,165 +21,208 @@ public class SentimentService {
     private PhrasalVerbService phrasalVerbService;
 
     public Sentiment analyzeSentiment(String comment, Review review) {
+
+        AtomicInteger joyfulCount = new AtomicInteger(0);
+        AtomicInteger fearfulCount = new AtomicInteger(0);
+        AtomicInteger anxiousCount = new AtomicInteger(0);
+        AtomicInteger angryCount = new AtomicInteger(0);
+        AtomicInteger sadnessCount = new AtomicInteger(0);
+
+        // Δημιουργία αντικειμένου Properties
         Properties props = new Properties();
         props.setProperty("annotators", "tokenize,ssplit,pos,lemma");
         StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
-
         CoreDocument document = new CoreDocument(comment);
         pipeline.annotate(document);
 
-        int joyfulCount = 0;
-        int fearfulCount = 0;
-        int anxiousCount = 0;
-        int angryCount = 0;
-        int sadnessCount = 0;
-        int neutralCount = 0;
+
         int totalWords = 0;
         int numberOf_sentimentWords = 0;
-
         boolean negateNext = false;
-        int negateWindow = 0;
-        int negateDistance = 3; // Distance from negation to apply it
         List<String> sentimentWords = new ArrayList<>();
 
+        int numberOfSentence = 0;
         for (CoreSentence sentence : document.sentences()) {
+            numberOfSentence++;
             List<CoreLabel> tokens = sentence.tokens();
+            System.out.println("\nSentence(" + numberOfSentence + "): ");
+
             for (int i = 0; i < tokens.size(); i++) {
-                String lemma = tokens.get(i).lemma();
-                System.out.println("\nlemma: " + lemma);
-                String word = tokens.get(i).lemma().toLowerCase();
-                String pos = tokens.get(i).get(CoreAnnotations.PartOfSpeechAnnotation.class);
-                System.out.println("\nToken: " + word + ", POS: " + pos+"\n");
+                String token = tokens.get(i).lemma().toLowerCase();
+                List<String> splitTokens = splitToken(token);
 
-                // Check if the token is punctuation or a number
-                if (word.matches("\\p{Punct}") || word.matches("\\d+")) {
-                    // Reset negation if punctuation is a sentence-ending punctuation
-                    if (word.equals(".") || word.equals("!") || word.equals("?")) {
+                for (String splitToken : splitTokens) {
+                    String word = splitToken.toLowerCase();
+                    String pos = tokens.get(i).get(CoreAnnotations.PartOfSpeechAnnotation.class);
+                    System.out.println("\nElement(" + (i) + "): " + word);
+
+                    // Check if the token is punctuation or a number
+                    if (word.matches("\\p{Punct}") || word.matches("\\d+")) {
+                        System.out.println("Word is the punctuation: '" + pos+"'");
                         negateNext = false;
+                        continue;
                     }
-                    continue;
-                }
 
-                // Count total words (excluding punctuation and numbers)
-                totalWords++;
+                    // Count total words (excluding punctuation and numbers)
+                    totalWords++;
 
-                // Reset negateWindow if its counter expires
-                if (negateWindow > 0) {
-                    negateWindow--;
-                }
+                    // Check for negation word and handle negation logic
+                    if (NegationWords.NEGATION_WORDS.contains(word)) {
+                        System.out.println("\nWord is negated. Word == " + word);
+                        negateNext = true;
 
-                // Check for negation word and reset negateWindow
-                if (NegationWords.NEGATION_WORDS.contains(word)) {
-                    negateWindow = negateDistance;
-                    negateNext = true;
-                    continue;
-                }
+                        // Check next three tokens for verbs/adverbs/gerunds or sentiment words
+                        for (int j = i + 1; j <= i+3; j++) {
+                            String nextWord = tokens.get(j).lemma().toLowerCase();
+                            String nextPos = tokens.get(j).get(CoreAnnotations.PartOfSpeechAnnotation.class);
 
-                // Handle Phrasal Verbs
-                boolean phrasalVerbFound = false;
+                            // Check for sentence-ending punctuation to stop negation scope
+                            if (nextWord.matches("[.!?]")) {
+                                break;
+                            }
 
-                for (int j = 1; j <= 3 && (i + j) < tokens.size(); j++) {
-                    String nextWord = tokens.get(i + j).lemma().toLowerCase();
-                    String phrasalVerb = word + " " + nextWord;
+                            // Check if one the next three words express one of these emotions. If yes, then increase the joy emotion
+                            if (SentimentWords.SADNESS_WORDS.contains(nextWord) ||
+                                    SentimentWords.ANXIOUS_WORDS.contains(nextWord) ||
+                                    SentimentWords.ANGRY_WORDS.contains(nextWord) ||
+                                    SentimentWords.FEARING_WORDS.contains(nextWord)) {
 
-                    int result = phrasalVerbService.processPhrasalVerb(phrasalVerb, sentimentWords,negateNext);
+                                joyfulCount.incrementAndGet();
+                                sentimentWords.add("not " + nextWord);
+                                numberOf_sentimentWords++;
+                                i = j;
+                                break;
 
-                    if (result != 0) {
-                        if (negateNext) {
-                            result = invertSentiment(result);
-                            negateNext = false; // Reset negation flag after applying
+                            }// Check if one the next three words express joy. If yes, then increase the joy anger
+                            else if (SentimentWords.JOYFUL_WORDS.contains(nextWord)) {
+                                sadnessCount.incrementAndGet();
+                                sentimentWords.add("not " + nextWord);
+                                numberOf_sentimentWords++;
+                                i = j;
+                                break;
+                            }
+
                         }
-                        switch (result) {
-                            case 1 -> angryCount++;
-                            case 2 -> joyfulCount++;
-                            case 3 -> fearfulCount++;
-                            case 4 -> anxiousCount++;
-                            case 5 -> sadnessCount++;
+                        negateNext = false;  // Reset negation flag after applying
+                    }
+
+                    // Handle Phrasal Verbs
+                    boolean phrasalVerbFound = false;
+
+                    for (int j = 1; j <= 3 && (i + j) < tokens.size(); j++) {
+                        String nextWord = tokens.get(i + j).lemma().toLowerCase();
+                        String phrasalVerb = word + " " + nextWord;
+
+                        int result = phrasalVerbService.processPhrasalVerb(phrasalVerb, sentimentWords, negateNext);
+                        if (result != 0){
+                            System.out.println("\nPhrasalVerb: " + phrasalVerb);
+                            checkEmotion(result,negateNext,angryCount,joyfulCount,fearfulCount, anxiousCount, sadnessCount);
+                            numberOf_sentimentWords++;
+                            i += j;
+                            phrasalVerbFound = true;
+                            break;
+                        }
+                    }
+                    if (phrasalVerbFound) {
+                        continue;
+                    }
+                    // Apply sentiment logic
+                    if (SentimentWords.JOYFUL_WORDS.contains(word)) {
+                        if (negateNext) {
+                            sadnessCount.incrementAndGet();
+                            negateNext = false;
+                            sentimentWords.add("not " + word);
+                        } else {
+                            joyfulCount.incrementAndGet();
+                            sentimentWords.add(word);
                         }
                         numberOf_sentimentWords++;
-                        i += j; // Move index to skip the words part of the phrasal verb
-                        phrasalVerbFound = true;
-                        break;
+                    } else if (SentimentWords.SADNESS_WORDS.contains(word)) {
+                        if (negateNext) {
+                            joyfulCount.incrementAndGet();
+                            negateNext = false;
+                            sentimentWords.add("not " + word);
+                        } else {
+                            sadnessCount.incrementAndGet();
+                            sentimentWords.add(word);
+                        }
+                        numberOf_sentimentWords++;
+                    } else if (SentimentWords.ANXIOUS_WORDS.contains(word)) {
+                        if (negateNext) {
+                            joyfulCount.incrementAndGet();
+                            negateNext = false;
+                            sentimentWords.add("not " + word);
+                        } else {
+                            anxiousCount.incrementAndGet();
+                            sentimentWords.add(word);
+                        }
+                        numberOf_sentimentWords++;
+                    } else if (SentimentWords.ANGRY_WORDS.contains(word)) {
+                        if (negateNext) {
+                            joyfulCount.incrementAndGet();
+                            negateNext = false;
+                            sentimentWords.add("not " + word);
+                        } else {
+                            angryCount.incrementAndGet();
+                            sentimentWords.add(word);
+                        }
+                        numberOf_sentimentWords++;
+                    } else if (SentimentWords.FEARING_WORDS.contains(word)) {
+                        if (negateNext) {
+                            joyfulCount.incrementAndGet();
+                            negateNext = false;
+                            sentimentWords.add("not " + word);
+                        } else {
+                            fearfulCount.incrementAndGet();
+                            sentimentWords.add(word);
+                        }
+                        numberOf_sentimentWords++;
                     }
-                }
-
-                if (phrasalVerbFound) {
-                    negateNext = false; // Reset negation flag after handling a phrasal verb
-                    continue;
-                }
-
-                // Skip neutral words (e.g., "always") if negation is active
-                if (negateWindow > 0 && !SentimentWords.isSentimentWord(word)) {
-                    continue;
-                }
-
-                // Apply sentiment logic
-                if (SentimentWords.JOYFUL_WORDS.contains(word)) {
-                    if (negateNext) {
-                        sadnessCount++;
-                        negateNext = false;
-                        sentimentWords.add("not "+word);
-                    } else {
-                        joyfulCount++;
-                        sentimentWords.add(word);
-                    }
-                    numberOf_sentimentWords++;
-                } else if (SentimentWords.SADNESS_WORDS.contains(word)) {
-                    if (negateNext) {
-                        joyfulCount++;
-                        negateNext = false;
-                        sentimentWords.add("not "+word);
-                    } else {
-                        sadnessCount++;
-                        sentimentWords.add(word);
-                    }
-                    numberOf_sentimentWords++;
-                } else if (SentimentWords.ANXIOUS_WORDS.contains(word)) {
-                    if (negateNext) {
-                        joyfulCount++;
-                        negateNext = false;
-                        sentimentWords.add("not "+word);
-                    } else {
-                        anxiousCount++;
-                        sentimentWords.add(word);
-                    }
-                    numberOf_sentimentWords++;
-                } else if (SentimentWords.ANGRY_WORDS.contains(word)) {
-                    if (negateNext) {
-                        joyfulCount++;
-                        negateNext = false;
-                        sentimentWords.add("not "+word);
-                    } else {
-                        angryCount++;
-                        sentimentWords.add(word);
-                    }
-                    numberOf_sentimentWords++;
-                } else if (SentimentWords.FEARING_WORDS.contains(word)) {
-                    if (negateNext) {
-                        joyfulCount++;
-                        negateNext = false;
-                        sentimentWords.add("not "+word);
-                    } else {
-                        fearfulCount++;
-                        sentimentWords.add(word);
-                    }
-                    numberOf_sentimentWords++;
                 }
             }
         }
 
         // PRINT THE RESULTS OF NPL PROCESSING
-        printStatistcs(totalWords,numberOf_sentimentWords,sentimentWords);
+        printStatistcs(totalWords, numberOf_sentimentWords, sentimentWords);
 
         // Calculate scores
-        Map<String, Double> emotionScores = calculateScores(totalWords, joyfulCount, fearfulCount, anxiousCount, sadnessCount, angryCount , neutralCount);
+        Map<String, Double> emotionScores = calculateScores(totalWords, joyfulCount, fearfulCount, anxiousCount, sadnessCount, angryCount, 0);
 
         // Generate composite sentiment by sorting the keys (emotions) alphabetically
         String compositeSentiment = compositeSentiment(emotionScores);
 
-        System.out.println("\ncompositeSentiment: " + compositeSentiment+"\n\n");
+        System.out.println("\ncompositeSentiment: ******** " + compositeSentiment + "******** \n\n");
 
         return new Sentiment(compositeSentiment, review);
+    }
+
+    // Method to split tokens based on punctuation
+    private List<String> splitToken(String token) {
+        List<String> result = new ArrayList<>();
+        String[] parts = token.split("(?<=\\p{Punct})|(?=\\p{Punct})");
+
+        for (String part : parts) {
+            if (!part.trim().isEmpty()) {
+                result.add(part.trim());
+            }
+        }
+        return result;
+    }
+
+    private void checkEmotion(int result, boolean negateNext, AtomicInteger angryCount, AtomicInteger joyfulCount,
+                              AtomicInteger fearfulCount, AtomicInteger anxiousCount, AtomicInteger sadnessCount) {
+
+        if (negateNext) {
+            result = invertSentiment(result);
+            negateNext = false;
+        }
+        switch (result) {
+            case 1 -> angryCount.incrementAndGet();
+            case 2 -> joyfulCount.incrementAndGet();
+            case 3 -> fearfulCount.incrementAndGet();
+            case 4 -> anxiousCount.incrementAndGet();
+            case 5 -> sadnessCount.incrementAndGet();
+        }
     }
 
     private Map<String, Integer> initializeEmotionCounts(){
@@ -199,11 +243,11 @@ public class SentimentService {
             case 1: // Angry
                 return 2; // Joyful
             case 2: // Joyful
-                return 1; // Angry
+                return 5; // Angry
             case 3: // Fearful
-                return 2; // Anxious
+                return 2; // Joyful
             case 4: // Anxious
-                return 2; // Fearful
+                return 2; // Joyful
             case 5: // Sadness
                 return 2; // Joyful
             default:
@@ -224,15 +268,18 @@ public class SentimentService {
         System.out.println("\nsentimentWords: " + sentimentWords);
     }
 
-    private Map<String, Double> calculateScores(int totalWords,int joyfulCount, int fearfulCount, int anxiousCount, int sadnessCount, int angryCount ,int neutralCount){
+    private Map<String, Double> calculateScores(int totalWords, AtomicInteger joyfulCount, AtomicInteger fearfulCount,
+                                                AtomicInteger anxiousCount, AtomicInteger sadnessCount, AtomicInteger angryCount,
+                                                int neutralCount) {
         // Avoid division by zero
         if (totalWords == 0) totalWords = 1;
 
-        double joyScore = joyfulCount / (double) totalWords;
-        double fearScore = fearfulCount / (double) totalWords;
-        double anxiousScore = anxiousCount / (double) totalWords;
-        double sadnessScore = sadnessCount / (double) totalWords;
-        double angerScore = angryCount / (double) totalWords;
+        // Convert AtomicInteger to int and perform the division
+        double joyScore = joyfulCount.get() / (double) totalWords;
+        double fearScore = fearfulCount.get() / (double) totalWords;
+        double anxiousScore = anxiousCount.get() / (double) totalWords;
+        double sadnessScore = sadnessCount.get() / (double) totalWords;
+        double angerScore = angryCount.get() / (double) totalWords;
         double neutralScore = neutralCount / (double) totalWords;
 
         System.out.println("\njoyScore: " + joyScore + "\n");
@@ -262,10 +309,15 @@ public class SentimentService {
         if (neutralScore >= 0.01) {
             emotionScores.put("neutral", neutralScore);
         }
+
+        // If all scores are below 0.01, default to neutral
         if (joyScore < 0.01 && fearScore < 0.01 && anxiousScore < 0.01 && sadnessScore < 0.01 && angerScore < 0.01) {
             emotionScores.put("neutral", 1.0);
         }
+
         return emotionScores;
     }
+
+
 
 }
