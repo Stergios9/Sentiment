@@ -14,6 +14,7 @@ The application uses **Spring Boot** and **JPA** for its backend, while the data
 - **Java 11+**
 - **Spring Boot**
 - **Spring Data JPA**
+- **Spring Boot MVC**
 - **H2 Database**
 - **Maven**
 
