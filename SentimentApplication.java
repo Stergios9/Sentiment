@@ -9,5 +9,10 @@ public class SentimentApplication {
     public static void main(String[] args) {
 		SpringApplication.run(SentimentApplication.class, args);
 
+public class SentimentApplication {
+
+    public static void main(String[] args) {
+		
+
 	}
 }
