@@ -1,3 +1,5 @@
+## OPEN MAIN BRANCH
+
 # Sentiment Application
 
 The Sentiment application is an online psychological support application for citizens. It provides a medical diagnosis, relaxation methods, and approaches to managing potential illness, and refers users to a mental health specialist located in the patient's area. 
